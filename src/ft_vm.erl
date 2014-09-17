@@ -21,6 +21,7 @@
          logs/1, log/4,
          uuid/1, uuid/3,
          state/1, state/3,
+         locked/1, locked/3,
          alias/1, alias/3,
          owner/1, owner/3,
          dataset/1, dataset/3,
@@ -40,6 +41,7 @@
               logs/1, log/4,
               uuid/1, uuid/3,
               state/1, state/3,
+              locked/1, locked/3,
               alias/1, alias/3,
               owner/1, owner/3,
               dataset/1, dataset/3,
@@ -71,6 +73,7 @@ new(_) ->
 ?G(<<"uuid">>, uuid);
 ?G(<<"alias">>, alias);
 ?G(<<"state">>, state);
+?G(<<"locked">>, locked);
 ?G(<<"owner">>, owner);
 ?G(<<"dataset">>, dataset);
 ?G(<<"package">>, package);
@@ -83,6 +86,7 @@ new(_) ->
 ?S(<<"uuid">>, uuid);
 ?S(<<"alias">>, alias);
 ?S(<<"state">>, state);
+?S(<<"locked">>, locked);
 ?S(<<"owner">>, owner);
 ?S(<<"dataset">>, dataset);
 ?S(<<"package">>, package);
@@ -156,6 +160,8 @@ set(ID, [<<"metadata">> | R], V, H) ->
 ?S(alias).
 ?G(state).
 ?S(state).
+?G(locked).
+?S(locked).
 ?G(owner).
 ?S(owner).
 ?G(dataset).
@@ -336,6 +342,7 @@ load({T, ID}, Sb) ->
     Package = jsxd:get([<<"package">>], <<>>, V),
     {ok, Hypervisor} = jsxd:get([<<"hypervisor">>], V),
     {ok, State} = jsxd:get([<<"state">>], V),
+    {ok, Locked} = jsxd:get([<<"locked">>], V),
 
     NetworkMap = jsxd:get([<<"network_mappings">>], [], V),
     Config = jsxd:get([<<"config">>], [], V),
@@ -348,6 +355,7 @@ load({T, ID}, Sb) ->
 
     {ok, UUID1} = ?NEW_LWW(UUID, T),
     {ok, State1} = ?NEW_LWW(State, T),
+    {ok, Locked1} = ?NEW_LWW(Locked, T),
     {ok, Alias1} = ?NEW_LWW(Alias, T),
     {ok, Owner1} = ?NEW_LWW(Owner, T),
     {ok, Dataset1} = ?NEW_LWW(Dataset, T),
@@ -380,6 +388,7 @@ load({T, ID}, Sb) ->
         package = Package1,
         hypervisor = Hypervisor1,
         state = State1,
+        locked = Locked1,
 
         logs = Logs1,
 
@@ -410,6 +419,7 @@ to_json(V) ->
      {<<"groupings">>, groupings(V)},
      {<<"hypervisor">>, hypervisor(V)},
      {<<"info">>, info(V)},
+     {<<"locked">>, locked(V)},
      {<<"log">>, L},
      {<<"metadata">>, metadata(V)},
      {<<"network_mappings">>, M},
@@ -429,6 +439,7 @@ merge(#?VM{
           package = Package1,
           hypervisor = Hypervisor1,
           state = State1,
+          locked = Locked1,
 
           logs = Logs1,
           groupings = Groupings1,
@@ -449,6 +460,7 @@ merge(#?VM{
           package = Package2,
           hypervisor = Hypervisor2,
           state = State2,
+          locked = Locked2,
 
           logs = Logs2,
           groupings = Groupings2,
@@ -469,6 +481,7 @@ merge(#?VM{
         package = riak_dt_lwwreg:merge(Package1, Package2),
         hypervisor = riak_dt_lwwreg:merge(Hypervisor1, Hypervisor2),
         state = riak_dt_lwwreg:merge(State1, State2),
+        locked = riak_dt_lwwreg:merge(Locked1, Locked2),
 
         logs = riak_dt_orswot:merge(Logs1, Logs2),
         groupings = riak_dt_orswot:merge(Groupings1, Groupings2),
